@@ -1,0 +1,10 @@
+pandas
+requests
+python-dotenv
+nltk
+spacy
+tqdm
+streamlit
+faiss-cpu
+langchain
+openai
