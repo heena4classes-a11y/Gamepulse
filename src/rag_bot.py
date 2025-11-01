@@ -22,7 +22,7 @@ openai.api_version = "2023-07-01-preview"
 # ----------------------------
 # 2️⃣ Load FAISS index + metadata
 # ----------------------------
-def load_index(index_path="../data/vectors/faiss_index", metadata_path="../data/vectors/metadata.pkl"):
+def load_index(index_path="data/vectors/faiss_index", metadata_path="data/vectors/metadata.pkl"):
     index = faiss.read_index(index_path)
     with open(metadata_path, "rb") as f:
         df = pickle.load(f)
