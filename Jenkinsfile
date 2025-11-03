@@ -1,51 +1,47 @@
 pipeline {
-    agent any
+agent any
+environment {
 
-    environment {
-        APP_DIR = "/home/ec2-user/streamlit-app"
-        PORT = "8501"
-    }
-
-    stages {
-        stage('Setup') {
-            steps {
-                sh "mkdir -p ${APP_DIR}"
-            }
-        }
-
-        stage('Pull Code') {
-            steps {
-                dir("${APP_DIR}") {
-                    git branch: 'main', url: 'https://github.com/<your-repo>.git'
-                }
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
+    API_KEY = credentials('AZURE_OPENAI_API_KEY')
+    DEPLOYMENT_NAME = credentials('AZURE_OPENAI_DEPLOYMENT')
+    HUGGINGFACE_API_KEY = credentials('HUGGINGFACE_API_KEY')
+```
+    // Docker and container settings
+    DOCKER_IMAGE = 'heena1707/gamepulse:v2'
+    CONTAINER_NAME = 'genai-gamepulse-app'
+    EC2_USER = 'ec2-user'
+    EC2_HOST = '34.226.211.27'  // replace with your EC2 public IP
+}
+stages {
+    stage('Deploy on EC2') {
+        steps {
+            sshagent(['ec2-ssh']) {  // Jenkins SSH credentials ID
                 sh """
-                    python3 -m pip install --upgrade pip
-                    pip3 install -r ${APP_DIR}/requirements.txt
+                ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST '
+                    echo "Pulling latest Docker image..."
+                    docker pull $DOCKER_IMAGE
+                    
+                    echo "Stopping and removing old container if exists..."
+                    docker rm -f $CONTAINER_NAME || true
+                    
+                    echo "Running new container with environment variables..."
+                    docker run -d \\
+                        --name $CONTAINER_NAME \\
+                        -p 8501:8501 \\
+                          -e AZURE_OPENAI_API_KEY=$API_KEY \\
+                          -e AZURE_OPENAI_ENDPOINT=https://aoi-rotopoc-001.openai.azure.com/ \\
+                          -e AZURE_OPENAI_DEPLOYMENT=$DEPLOYMENT_NAME \\
+                          -e AZURE_OPENAI_API_VERSION=2024-05-01-preview \\
+                          -e HUGGINGFACE_API_KEY=$HUGGINGFACE_API_KEY \\
+                        $DOCKER_IMAGE
+                    
+                    echo "Deployment complete!"
+                '
                 """
             }
         }
-
-        stage('Run Streamlit App') {
-            steps {
-                sh """
-                    fuser -k ${PORT}/tcp || true
-                    nohup streamlit run ${APP_DIR}/app.py --server.port ${PORT} --server.address 0.0.0.0 > ${APP_DIR}/app.log 2>&1 &
-                """
-            }
-        }
     }
+}
+```
 
-    post {
-        success {
-            echo "✅ Streamlit app deployed successfully at http://<EC2_PUBLIC_IP>:${PORT}"
-        }
-        failure {
-            echo "❌ Deployment failed!"
-        }
-    }
 }
