@@ -17,10 +17,9 @@ pipeline {
     stages {
         stage('Deploy on EC2') {
             steps {
-                echo "Starting EC2 deployment..."
-                sshagent(['ec2-ssh']) { // Jenkins SSH credentials ID
+                echo "Starting EC2 deployment..." { // Jenkins SSH credentials ID
                     bat """
-                    ssh -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% ^
+                    ssh -i C:\Users\hramteke\Downloads\pemfile.pem -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% ^
                         "echo Pulling latest Docker image... && ^
                          docker pull %DOCKER_IMAGE% && ^
                          echo Stopping and removing old container... && ^
