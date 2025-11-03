@@ -5,7 +5,6 @@ environment {
     API_KEY = credentials('AZURE_OPENAI_API_KEY')
     DEPLOYMENT_NAME = credentials('AZURE_OPENAI_DEPLOYMENT')
     HUGGINGFACE_API_KEY = credentials('HUGGINGFACE_API_KEY')
-```
     // Docker and container settings
     DOCKER_IMAGE = 'heena1707/gamepulse:v2'
     CONTAINER_NAME = 'genai-gamepulse-app'
